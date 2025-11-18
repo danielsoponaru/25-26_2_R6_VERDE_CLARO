@@ -1,0 +1,4 @@
+conda env create --name MI_ENTORNO --file entorno_RETO06.yml
+
+
+
