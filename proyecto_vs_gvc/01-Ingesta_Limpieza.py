@@ -27,8 +27,6 @@ for col in columnas_fecha:
     if col in df.columns:
         df[col] = pd.to_datetime(df[col], errors="coerce")
 #convertir checkin_month en números del 1 al 12 y checkin_day del 1 al 7
-import pandas as pd
-
 #meses
 month_map = {
     "January": 1, "February": 2, "March": 3, "April": 4,
