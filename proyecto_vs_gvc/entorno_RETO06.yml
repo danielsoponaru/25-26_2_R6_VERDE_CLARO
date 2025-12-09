@@ -36,4 +36,6 @@ dependencies:
       - seaborn==0.13.2
       - six==1.17.0
       - tzdata==2025.2
+      - scikit-learn
+      - imbalanced-learn
 prefix: C:\Users\danie\.conda\envs\25-26_2_R6_VERDE_CLARO
