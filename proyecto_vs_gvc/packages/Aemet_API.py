@@ -1,6 +1,7 @@
-def aemet(fecha_ini, fecha_fin, idema, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"):
+def aemet(fecha_ini, fecha_fin, idema, espera = 5, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"):
     import requests
     import pandas as pd
+    import time
     # api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     # fecha_ini = api.fechador(month = 1, day = 2)
     # fecha_fin = api.fechador(month = 1, day = 4)
@@ -11,16 +12,31 @@ def aemet(fecha_ini, fecha_fin, idema, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO
     cod_idema = str(idema)
     fecha_inicio = str(fecha_ini)
     fecha_final = str(fecha_fin)
+
     url = f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/{fecha_inicio}/fechafin/{fecha_final}/estacion/{cod_idema}'
+
     request1 = requests.get(url, headers = headers)
     status = request1.status_code
+    request_json = request1.json()
+    print(f'Request {status}')
     if status == 200:
-        print(request1)
-        request = requests.get(url = request1.json()['datos']).json()
-        return pd.DataFrame(request)
+        print(f'Código de petición de la API: {status}')
+        url2 = request1.json()['datos']
+        time.sleep(espera)
+        request = requests.get(url = url2)
+        contador1 = 0
+        while request.status_code != 200:
+            contador1 += 1
+            time.sleep(espera)
+            request = requests.get(url = url2)
+            if contador1 <= 10:
+                break
+        request_json2 = request.json()
+        return pd.DataFrame(request_json2)
     else:
-        description = request1.json()['descripcion']
-        return print(f'Error: código de petición: {status}, {description}')
+        description = request_json['descripcion']
+        print(f'Error: {description}')
+        return status
 
 def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
     a = str(year)
@@ -55,8 +71,6 @@ def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
 def api_info():
     import requests
     import pandas as pd
-    import time
-    time.sleep(61)
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
         "api_key": API_KEY
@@ -70,8 +84,6 @@ def api_info():
 def estaciones(interes = True):
     import requests
     import pandas as pd
-    import time
-    time.sleep(61)
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
         "api_key": API_KEY
