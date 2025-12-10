@@ -15,11 +15,12 @@ def aemet(fecha_ini, fecha_fin, idema, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiO
     request1 = requests.get(url, headers = headers)
     status = request1.status_code
     if status == 200:
+        print(request1)
         request = requests.get(url = request1.json()['datos']).json()
         return pd.DataFrame(request)
     else:
         description = request1.json()['descripcion']
-        return print(f'Error: código de petición: {status}, {}')
+        return print(f'Error: código de petición: {status}, {description}')
 
 def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
     a = str(year)
@@ -54,6 +55,8 @@ def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
 def api_info():
     import requests
     import pandas as pd
+    import time
+    time.sleep(61)
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
         "api_key": API_KEY
@@ -67,6 +70,8 @@ def api_info():
 def estaciones(interes = True):
     import requests
     import pandas as pd
+    import time
+    time.sleep(61)
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
         "api_key": API_KEY
@@ -101,3 +106,5 @@ def read_me():
     print('Cabe destacar que las consultas a la API solo pueden ser de un rango de 6 meses máximo.')
     print('\n')
     print('Finalmente, hay otro comando más, llamado api_info(), que al ejecutarlo dará la información de cada variable de las consultas de la API.')
+    print('\n')
+    print('Para evitar posibles errores en la cantidad de peticiones por minuto, todas las funciones generadas tendrán en pretiempo de actuación por defecto de un minuto.')
