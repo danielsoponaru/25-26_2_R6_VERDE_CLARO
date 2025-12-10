@@ -80,7 +80,7 @@ def estaciones(interes = True):
     dict_estaciones = requests.get(url = requests.get(url, headers = headers).json()['datos']).json()
     estaciones_meteorologicas = pd.DataFrame(dict_estaciones)[['indicativo', 'nombre', 'provincia']]
     estaciones_meteorologicas.columns = ['COD_IDEMA', 'NOMBRE', 'PROVINCIA']
-    codigos_idema_interes = ['9091R', '1082', '5402', '1024E', '5515X', '9263D', '8416X', '6156X', '3195']
+    codigos_idema_interes = ['9091R', '1082', '5402', '1024E', '5530E', '9263D', '8414A', '6155A', '3129']
     estaciones_reto = estaciones_meteorologicas[estaciones_meteorologicas['COD_IDEMA'].isin(codigos_idema_interes)]
     if interes == True:
         return estaciones_reto
