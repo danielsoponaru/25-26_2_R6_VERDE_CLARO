@@ -81,15 +81,25 @@ def api_info():
     variables.columns = ['VARIABLE', 'DESCRIPCIÓN', 'TIPO_DATOS', 'UNIDAD']
     return variables
 
-def estaciones(interes = True):
+def estaciones(interes = True, espera = 65):
     import requests
     import pandas as pd
+    import time
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
         "api_key": API_KEY
     }   
     url = f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/2023-01-01T14%3A30%3A00UTC/fechafin/2023-01-02T14%3A30%3A00UTC/todasestaciones'
-    dict_estaciones = requests.get(url = requests.get(url, headers = headers).json()['datos']).json()
+    request1 = requests.get(url, headers = headers)
+    code = request1.status_code
+    print(code)
+    if code == 429:
+        while code != 200:
+            time.sleep(espera)
+            request1 = requests.get(url, headers = headers)
+            code = request1.status_code
+            print(code)
+    dict_estaciones = requests.get(url = request1.json()['datos']).json()
     estaciones_meteorologicas = pd.DataFrame(dict_estaciones)[['indicativo', 'nombre', 'provincia']]
     estaciones_meteorologicas.columns = ['COD_IDEMA', 'NOMBRE', 'PROVINCIA']
     codigos_idema_interes = ['9091R', '1082', '5402', '1024E', '5530E', '9263D', '8414A', '6155A', '3129']
