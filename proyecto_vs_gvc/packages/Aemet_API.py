@@ -1,4 +1,16 @@
-def aemet(fecha_ini, fecha_fin, idema, espera = 5, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"):
+def aemet(fecha_ini, fecha_fin, idema, api_key, espera = 5):
+    """Dada la fecha de inicio de estancia, la fecha final de estancia y el codigo idema de la estacion meteorológica, devuelve la consluta a la API de Aemet. Las fechas no pueden superar un rango mayor a 6 meses.
+
+    Args:
+        fecha_ini (str): Fecha de inicio del rango a consultar.
+        fecha_fin (str): Fecha final del rango a consultar.
+        idema (_type_): Código de la estación meteorológica de interés.
+        api_key (str): clave para usar la API.
+        espera (int, optional): Espera de 5 segundos para que el problema de la consulta no sea el wifi. Defaults to 5.
+
+    Returns:
+        df: df con los datos meteorológicos
+    """
     import requests
     import pandas as pd
     import time
@@ -39,6 +51,19 @@ def aemet(fecha_ini, fecha_fin, idema, espera = 5, api_key = "eyJhbGciOiJIUzI1Ni
         return status
 
 def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
+    """Dados los datos necesarios para generar una fecha, devuelve el formato de fecha que la API requiere.
+
+    Args:
+        month (int): Mes
+        day (int): Día
+        year (int, optional): Año. Defaults to 2023.
+        hour (int, optional): Hora. Defaults to 0.
+        min (int, optional): Minuto. Defaults to 0.
+        sec (int, optional): Segundo. Defaults to 0.
+
+    Returns:
+        str: fecha en el formato que la API solicita.
+    """
     a = str(year)
     m = str(month)
     if len(m) == 1:
@@ -68,12 +93,19 @@ def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
     fecha = a + '-' + mo + '-' + da + 'T' + ho + ':' + mi + ':' + se + 'UTC'
     return fecha
 
-def api_info():
+def api_info(api_key):
+    """Dada la clave de la api, genera un dataframe con la descripción de todas las variables que devuelve la API.
+
+    Args:
+        api_key (str): Clave de la API
+
+    Returns:
+        df: Descripción de las variables meteorologicas
+    """
     import requests
     import pandas as pd
-    API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
-        "api_key": API_KEY
+        "api_key": api_key
     }   
     url = f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/2023-01-01T14%3A30%3A00UTC/fechafin/2023-01-02T14%3A30%3A00UTC/estacion/9091R'
     dict_variables = requests.get(url = requests.get(url, headers = headers).json()['metadatos']).json()['campos']
@@ -81,13 +113,22 @@ def api_info():
     variables.columns = ['VARIABLE', 'DESCRIPCIÓN', 'TIPO_DATOS', 'UNIDAD']
     return variables
 
-def estaciones(interes = True, espera = 65):
+def estaciones(api_key, interes = True, espera = 65):
+    """Dada la clave de la API, devuelve la lista de las estaciones meteorologicas.
+
+    Args:
+        api_key (str): Clave de la API.
+        interes (bool): Si True, las estaciones meteorológicas son las más cercanas a los hoteles del reto. Si False, devuelve todas las estaciones meteorológicas de España. Defaults to True.
+        espera (int, optional): segundos de espera para evitar errores de conexión a Internet. Defaults to 65.
+
+    Returns:
+        df: Data Frame con los códigos idema, nombre y provincia de la estación.
+    """
     import requests
     import pandas as pd
     import time
-    API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
-        "api_key": API_KEY
+        "api_key": api_key
     }   
     url = f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/2023-01-01T14%3A30%3A00UTC/fechafin/2023-01-02T14%3A30%3A00UTC/todasestaciones'
     request1 = requests.get(url, headers = headers)
@@ -112,6 +153,8 @@ def estaciones(interes = True, espera = 65):
         print('El argumento interes debe ser booleano')
 
 def read_me():
+    """Explicación de como usar las funciones de este archivo .py.
+    """
     print('Para hacer consultas a la API, se necesitan 3 datos:')
     print('* La fecha-hora de inicio (fecha_ini)')
     print('* La fecha-hora de final (fecha_fin)')
