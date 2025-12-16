@@ -1,15 +1,42 @@
-def aemet(fecha_ini, fecha_fin, idema, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"):
+def aemet(fecha_ini, fecha_fin, idema, espera = 5, api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"):
     import requests
     import pandas as pd
+    import time
+    # api_key = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
+    # fecha_ini = api.fechador(month = 1, day = 2)
+    # fecha_fin = api.fechador(month = 1, day = 4)
+    # idema = '9091R'
     headers = {
         "api_key": api_key
     }
     cod_idema = str(idema)
     fecha_inicio = str(fecha_ini)
     fecha_final = str(fecha_fin)
+
     url = f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/{fecha_inicio}/fechafin/{fecha_final}/estacion/{cod_idema}'
-    request = requests.get(url = requests.get(url, headers = headers).json()['datos']).json()
-    return pd.DataFrame(request)
+
+    request1 = requests.get(url, headers = headers)
+    status = request1.status_code
+    request_json = request1.json()
+    print(f'Request {status}')
+    if status == 200:
+        print(f'Código de petición de la API: {status}')
+        url2 = request1.json()['datos']
+        time.sleep(espera)
+        request = requests.get(url = url2)
+        contador1 = 0
+        while request.status_code != 200:
+            contador1 += 1
+            time.sleep(espera)
+            request = requests.get(url = url2)
+            if contador1 <= 10:
+                break
+        request_json2 = request.json()
+        return pd.DataFrame(request_json2)
+    else:
+        description = request_json['descripcion']
+        print(f'Error: {description}')
+        return status
 
 def fechador(month, day, year = 2023, hour = 0, min = 0, sec = 0):
     a = str(year)
@@ -54,18 +81,28 @@ def api_info():
     variables.columns = ['VARIABLE', 'DESCRIPCIÓN', 'TIPO_DATOS', 'UNIDAD']
     return variables
 
-def estaciones(interes = True):
+def estaciones(interes = True, espera = 65):
     import requests
     import pandas as pd
+    import time
     API_KEY = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhaW1hci5xdWVyZWphenVAYWx1bW5pLm1vbmRyYWdvbi5lZHUiLCJqdGkiOiJhNDQ4YTE3NS02ZjZiLTQ1NjUtYmNhZC1hYzJlODMxNDQwMmIiLCJpc3MiOiJBRU1FVCIsImlhdCI6MTc2NDE3MDU2MiwidXNlcklkIjoiYTQ0OGExNzUtNmY2Yi00NTY1LWJjYWQtYWMyZTgzMTQ0MDJiIiwicm9sZSI6IiJ9.HvEKAHeogDARZ9WZrnu0d0nfXfpyEP3WIimMcawUzrw"
     headers = {
         "api_key": API_KEY
     }   
     url = f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/2023-01-01T14%3A30%3A00UTC/fechafin/2023-01-02T14%3A30%3A00UTC/todasestaciones'
-    dict_estaciones = requests.get(url = requests.get(url, headers = headers).json()['datos']).json()
+    request1 = requests.get(url, headers = headers)
+    code = request1.status_code
+    print(code)
+    if code == 429:
+        while code != 200:
+            time.sleep(espera)
+            request1 = requests.get(url, headers = headers)
+            code = request1.status_code
+            print(code)
+    dict_estaciones = requests.get(url = request1.json()['datos']).json()
     estaciones_meteorologicas = pd.DataFrame(dict_estaciones)[['indicativo', 'nombre', 'provincia']]
     estaciones_meteorologicas.columns = ['COD_IDEMA', 'NOMBRE', 'PROVINCIA']
-    codigos_idema_interes = ['9091R', '1082', '5402', '1024E', '5515X', '9263D', '8416X', '6156X', '3194U']
+    codigos_idema_interes = ['9091R', '1082', '5402', '1024E', '5530E', '9263D', '8414A', '6155A', '3129']
     estaciones_reto = estaciones_meteorologicas[estaciones_meteorologicas['COD_IDEMA'].isin(codigos_idema_interes)]
     if interes == True:
         return estaciones_reto
@@ -88,6 +125,8 @@ def read_me():
     print('* Si se marca en False, saldrán los mismos datos, pero para todas las estaciones meteorológica a las que tiene acceso la API.')
     print('\n')
     print('Para hacer la consulta a la API, hay que usar el comando aemet()')
-    print('Cabe destacar que las consultas a la API solo pueden ser de un rango de 9 días máximo.')
+    print('Cabe destacar que las consultas a la API solo pueden ser de un rango de 6 meses máximo.')
     print('\n')
     print('Finalmente, hay otro comando más, llamado api_info(), que al ejecutarlo dará la información de cada variable de las consultas de la API.')
+    print('\n')
+    print('Para evitar posibles errores en la cantidad de peticiones por minuto, todas las funciones generadas tendrán en pretiempo de actuación por defecto de un minuto.')
