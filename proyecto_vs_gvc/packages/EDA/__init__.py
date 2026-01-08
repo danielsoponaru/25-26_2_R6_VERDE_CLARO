@@ -1,2 +1,1 @@
-from .funciones_estadisticos import *
-from .funciones_visualizacion_eda import *
+from .visualizacion_reportes import *
