@@ -5,22 +5,29 @@ import os
 
 def generar_reporte_eda_detallado(df):
     """
-    Genera 7 archivos PDF individuales con títulos limpios (sin números) 
-    y ejes con nombres de negocio formales.
+    Genera 7 análisis individuales exportados en formato PDF y JPG.
+    Organiza los archivos en subcarpetas para mayor orden.
     """
-    ruta_carpeta = "Graficos"
-    os.makedirs(ruta_carpeta, exist_ok=True)
+    # Configuración de carpetas
+    base_dir = "Graficos"
+    folders = ["pdf", "jpg"]
+    for folder in folders:
+        os.makedirs(os.path.join(base_dir, folder), exist_ok=True)
     
     sns.set_theme(style="whitegrid")
     paleta_unificada = "mako"
     
-    print(f"[SISTEMA EDA] Generando reportes individuales con etiquetas de negocio...")
+    print(f"[SISTEMA EDA] Generando archivos en formatos PDF y JPG...")
 
-    def guardar_grafico(fig, nombre):
-        ruta = os.path.join(ruta_carpeta, f"{nombre}.pdf")
-        fig.savefig(ruta, bbox_inches='tight')
+    def guardar_formatos(fig, nombre_base):
+        """Guarda la figura en las subcarpetas correspondientes."""
+        ruta_pdf = os.path.join(base_dir, "pdf", f"{nombre_base}.pdf")
+        ruta_jpg = os.path.join(base_dir, "jpg", f"{nombre_base}.jpg")
+        
+        fig.savefig(ruta_pdf, bbox_inches='tight')
+        fig.savefig(ruta_jpg, bbox_inches='tight', dpi=300)
         plt.close(fig)
-        print(f" -> Guardado: {ruta}")
+        print(f" -> Exportado: {nombre_base} (PDF/JPG)")
 
     # --- 1. DISTRIBUCIÓN DEL ESTADO ---
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -28,7 +35,7 @@ def generar_reporte_eda_detallado(df):
     ax.set_title('Proporción de Reservas y Cancelaciones', fontsize=14)
     ax.set_xlabel("Estado de la Reserva")
     ax.set_ylabel("Cantidad Total de Registros")
-    guardar_grafico(fig, "distribucion_estado_reserva")
+    guardar_formatos(fig, "distribucion_estado_reserva")
 
     # --- 2. ESTACIONALIDAD ---
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -38,7 +45,7 @@ def generar_reporte_eda_detallado(df):
         ax.set_title('Volumen de Reservas y Cancelaciones por Mes', fontsize=14)
         ax.set_xlabel("Mes de Entrada (Check-in)")
         ax.set_ylabel("Número de Reservas")
-    guardar_grafico(fig, "estacionalidad_mensual")
+    guardar_formatos(fig, "estacionalidad_mensual")
 
     # --- 3. ANTELACIÓN ---
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -48,7 +55,7 @@ def generar_reporte_eda_detallado(df):
         ax.set_title('Distribución de la Antelación de la Reserva', fontsize=14)
         ax.set_xlabel("Días de Antelación (Lead Time)")
         ax.set_ylabel("Frecuencia de Reservas")
-    guardar_grafico(fig, "distribucion_antelacion")
+    guardar_formatos(fig, "distribucion_antelacion")
 
     # --- 4. SEGMENTO DE NEGOCIO ---
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -58,7 +65,7 @@ def generar_reporte_eda_detallado(df):
         ax.set_xlabel("Segmento de Negocio")
         ax.set_ylabel("Cantidad de Reservas")
         plt.xticks(rotation=30, ha='right')
-    guardar_grafico(fig, "segmento_mercado")
+    guardar_formatos(fig, "segmento_mercado")
 
     # --- 5. TARIFAS (ADR) ---
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -67,7 +74,7 @@ def generar_reporte_eda_detallado(df):
         ax.set_title('Impacto del Precio en el Estado de la Reserva', fontsize=14)
         ax.set_xlabel("Estado de la Reserva")
         ax.set_ylabel("Tarifa Diaria Promedio (ADR)")
-    guardar_grafico(fig, "analisis_tarifas_adr")
+    guardar_formatos(fig, "analisis_tarifas_adr")
 
     # --- 6. DURACIÓN ESTANCIA ---
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -77,18 +84,16 @@ def generar_reporte_eda_detallado(df):
         ax.set_title('Densidad de la Duración de las Estancias', fontsize=14)
         ax.set_xlabel("Estado de la Reserva")
         ax.set_ylabel("Duración de la Estancia (Noches)")
-    guardar_grafico(fig, "duracion_estancia")
+    guardar_formatos(fig, "duracion_estancia")
 
     # --- 7. MATRIZ DE CORRELACIÓN ---
     fig, ax = plt.subplots(figsize=(12, 10))
     numeric_df = df.select_dtypes(include=['number'])
-    # Renombrar columnas solo para el gráfico de correlación para que se vean bien
-    corr_matrix = numeric_df.corr()
-    sns.heatmap(corr_matrix, annot=True, cmap='mako', fmt=".2f", center=0, ax=ax)
+    sns.heatmap(numeric_df.corr(), annot=True, cmap='mako', fmt=".2f", center=0, ax=ax)
     ax.set_title('Relación entre Variables Numéricas', fontsize=14)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
     ax.set_xlabel("Variables de Negocio")
     ax.set_ylabel("Variables de Negocio")
-    guardar_grafico(fig, "matriz_correlacion")
+    guardar_formatos(fig, "matriz_correlacion")
     
-    print(f"\n[FINALIZADO] Los 7 reportes han sido generados en la carpeta '{ruta_carpeta}'.")
+    print(f"\n[FINALIZADO] Archivos disponibles en '{base_dir}/pdf' y '{base_dir}/jpg'.")
