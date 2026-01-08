@@ -1,0 +1,109 @@
+import requests
+from bs4 import BeautifulSoup
+import time # Importante para esperar entre peticiones y no ser bloqueado
+import pandas as pd # Opcional: para ver los datos mejor al final
+
+# URL base limpia (sin los parámetros de página para añadirlos dinámicamente)
+# Nota: He quitado 'rows=75' y 'page=1' de aquí para gestionarlo en el código
+base_url = "https://www.booking.com/reviews/es/hotel/libere-vitoria-centro.es.html"
+
+# Parámetros fijos (los que traía tu link)
+params = {
+    'aid': '356980',
+    'label': 'gog235jc-1DCA0oRkIVbGliZXJlLXZpdG9yaWEtY2VudHJvSDNYA2hGiAEBmAEKuAEXyAEM2AED6AEBiAIBqAIDuALSzuu6BsACAdICJDBiNGMxOWY2LWVlOGMtNDU3ZS05ZDZlLTVmYzM2NDNjZTM5M9gCBOACAQ',
+    'sid': 'b89a34b9ace8403db8dbb71ddde917f9',
+    'customer_type': 'total',
+    'hp_nav': '0',
+    'keep_landing': '1',
+    'order': 'featuredreviews',
+    'r_lang': 'es',
+    'rows': '75', # Lo dejamos por si acaso, aunque Booking suele ignorarlo
+}
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Accept-Language": "es-ES,es;q=0.9",
+}
+
+def obtener_todas_las_reviews():
+    todas_las_reviews = []
+    pagina_actual = 1
+    
+    while True:
+        print(f"--- Escrapeando página {pagina_actual} ---")
+        
+        # Añadimos el número de página a los parámetros
+        params['page'] = pagina_actual
+        
+        try:
+            response = requests.get(base_url, headers=headers, params=params)
+            
+            # Si booking nos bloquea o falla
+            if response.status_code != 200:
+                print(f"Error al cargar página {pagina_actual}: Código {response.status_code}")
+                break
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Buscamos los bloques de comentarios
+            lista_reviews = soup.find_all("li", class_="review_item")
+            
+            # CONDICIÓN DE PARADA:
+            # Si no encuentra reviews en esta página, significa que hemos llegado al final
+            if not lista_reviews:
+                print("No se encontraron más comentarios. Fin del proceso.")
+                break
+            
+            print(f"Encontrados {len(lista_reviews)} comentarios en esta página.")
+            
+            for review in lista_reviews:
+                item = {}
+                
+                # Extracción de datos (igual que antes)
+                fecha_tag = review.find("p", class_="review_item_date")
+                item['fecha'] = fecha_tag.get_text(strip=True).replace("Comentario enviado el ", "") if fecha_tag else "Sin fecha"
+                
+                score_tag = review.find("div", class_="review_item_review_score")
+                item['puntuacion'] = score_tag.get_text(strip=True) if score_tag else "Sin puntuación"
+                
+                name_tag = review.find("p", class_="reviewer_name")
+                item['nombre'] = name_tag.get_text(strip=True) if name_tag else "Anónimo"
+                
+                # Título
+                title_tag = review.find("div", class_="review_item_header_content")
+                item['titulo'] = title_tag.get_text(strip=True).strip('"') if title_tag else ""
+                
+                # Comentario Positivo
+                pos_tag = review.find("p", class_="review_pos")
+                item['positivo'] = pos_tag.get_text(strip=True).replace("눇", "") if pos_tag else ""
+
+                # Comentario Negativo
+                neg_tag = review.find("p", class_="review_neg")
+                item['negativo'] = neg_tag.get_text(strip=True).replace("눉", "") if neg_tag else ""
+                
+                todas_las_reviews.append(item)
+            
+            # Pasamos a la siguiente página
+            pagina_actual += 1
+            
+            # IMPORTANTE: Esperar un poco para no saturar al servidor (y evitar bloqueo)
+            time.sleep(2) 
+            
+        except Exception as e:
+            print(f"Error crítico: {e}")
+            break
+            
+    return todas_las_reviews
+
+# Ejecutar
+datos = obtener_todas_las_reviews()
+
+print(f"\nTotal de comentarios extraídos: {len(datos)}")
+
+# (Opcional) Guardar en CSV si usas pandas
+# df = pd.DataFrame(datos)
+# df.to_csv('reviews_booking.csv', index=False, encoding='utf-8')
+# print("Guardado en reviews_booking.csv")
+# index=False es para que no guarde los números 0, 1, 2... de la izquierda
+df.to_csv('resultados_hotel.csv', index=False, encoding='utf-8-sig') 
+print("¡Listo! Archivo 'resultados_hotel.csv' creado.")
