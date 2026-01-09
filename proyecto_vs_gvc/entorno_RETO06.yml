@@ -26,6 +26,7 @@ dependencies:
       - fonttools==4.60.1
       - kiwisolver==1.4.9
       - matplotlib==3.10.7
+      - nltk
       - numpy==2.3.5
       - packaging==25.0
       - pandas==2.3.3
@@ -36,4 +37,5 @@ dependencies:
       - seaborn==0.13.2
       - six==1.17.0
       - tzdata==2025.2
+      - wordcloud
 prefix: C:\Users\danie\.conda\envs\25-26_2_R6_VERDE_CLARO
